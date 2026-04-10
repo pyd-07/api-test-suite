@@ -1,0 +1,152 @@
+version: 1
+
+baseUrl: https://jsonplaceholder.typicode.com
+
+tests:
+  - name: Get All Users
+    description: Fetch all users
+
+    request:
+      method: GET
+      url: /users
+
+    expect:
+      status: 200
+
+  - name: Get User by ID
+    description: Valid user fetch
+
+    request:
+      method: GET
+      url: /users/1
+
+    expect:
+      status: 200
+
+  - name: Get Invalid User
+    description: Should return 404
+
+    request:
+      method: GET
+      url: /users/9999
+
+    expect:
+      status: 404
+
+  - name: Get Posts
+    request:
+      method: GET
+      url: /posts
+
+    expect:
+      status: 200
+
+  - name: Query Posts by User
+    request:
+      method: GET
+      url: /posts
+      query:
+        userId: 1
+
+    expect:
+      status: 200
+
+  - name: Create User
+    description: POST request with JSON body
+
+    request:
+      method: POST
+      url: /users
+      headers:
+        Content-Type: application/json
+      body:
+        name: "Piyush"
+        username: "asura"
+        email: "piyush@example.com"
+
+    expect:
+      status: 201
+
+  - name: Update User
+    request:
+      method: PUT
+      url: /users/1
+      headers:
+        Content-Type: application/json
+      body:
+        name: "Updated Name"
+
+    expect:
+      status: 200
+
+  - name: Patch User
+    request:
+      method: PATCH
+      url: /users/1
+      headers:
+        Content-Type: application/json
+      body:
+        name: "Patched Name"
+
+    expect:
+      status: 200
+
+  - name: Delete User
+    request:
+      method: DELETE
+      url: /users/1
+
+    expect:
+      status: 200
+
+  - name: Comments with Query
+    request:
+      method: GET
+      url: /comments
+      query:
+        postId: 1
+
+    expect:
+      status: 200
+
+  - name: Albums Endpoint
+    request:
+      method: GET
+      url: /albums
+
+    expect:
+      status: 200
+
+  - name: Performance Check (Loose)
+    request:
+      method: GET
+      url: /posts
+
+    expect:
+      status: 200
+      responseTime: 800
+
+  - name: Performance Check (Strict)
+    request:
+      method: GET
+      url: /posts
+
+    expect:
+      status: 200
+      responseTime: 50
+
+  - name: Intentional Status Failure
+    request:
+      method: GET
+      url: /users
+
+    expect:
+      status: 404
+
+  - name: Missing Endpoint
+    request:
+      method: GET
+      url: /non-existent-route
+
+    expect:
+      status: 404

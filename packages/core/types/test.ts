@@ -6,12 +6,14 @@ export type HTTPMethod =
     | "DELETE"
     | "HEADS"
 
+export type Headers = Record<string, string> 
+export type queryParams = Record<string, string | number>
 export interface RequestConfig {
     method: HTTPMethod
     url: string
 
-    headers?: Record<string, string>
-    query?: Record<string, string | number>
+    headers?: Headers
+    query?: queryParams
 
     body?: unknown
     timeout?: number 
@@ -20,7 +22,7 @@ export interface RequestConfig {
 export interface Expectation {
     status: number
 
-    headers?: Record<string, string>
+    headers?: Headers
     body?: {
         contains?: string
         equals?: unknown
