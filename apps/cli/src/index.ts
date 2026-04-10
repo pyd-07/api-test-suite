@@ -3,6 +3,7 @@
 import fs from "fs"
 import yaml from "js-yaml"
 import {runTestSuite} from "@repo/core"
+import {TestCase} from "@repo/core/types/test"
 
 const args = process.argv.slice(2)
 
@@ -11,14 +12,15 @@ async function runTests(file: string) {
         const fileContent = fs.readFileSync(file, "utf-8")
         const parsed: any = yaml.load(fileContent)
 
-        const tests = parsed.tests
+        const baseUrl: string = parsed.baseUrl
+        const tests: TestCase[] = parsed.tests
 
         if (!tests || !Array.isArray(tests)){
             console.log("Invalid YAML format: `tests` array is misssing")
             process.exit(1)
         }
 
-        runTestSuite(tests)
+        runTestSuite(baseUrl, tests)
 
     } catch (error) {
         console.error(`Error Reading ${file}: ${error}`)
