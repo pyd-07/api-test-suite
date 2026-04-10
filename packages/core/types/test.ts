@@ -38,3 +38,8 @@ export interface TestCase {
     request: RequestConfig
     expect: Expectation
 }
+
+export interface FailedTest {
+    name: string
+    reason: string
+}

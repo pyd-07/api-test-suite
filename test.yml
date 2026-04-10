@@ -3,57 +3,48 @@ version: 1
 baseUrl: https://jsonplaceholder.typicode.com
 
 tests:
+  # -------------------------
+  # BASIC GET
+  # -------------------------
   - name: Get All Users
-    description: Fetch all users
-
     request:
       method: GET
       url: /users
-
     expect:
       status: 200
 
-  - name: Get User by ID
-    description: Valid user fetch
-
+  - name: Get Single User
     request:
       method: GET
       url: /users/1
-
     expect:
       status: 200
+      body:
+        contains: "Leanne Graham"
 
-  - name: Get Invalid User
-    description: Should return 404
-
+  - name: Invalid User
     request:
       method: GET
       url: /users/9999
-
     expect:
       status: 404
 
-  - name: Get Posts
-    request:
-      method: GET
-      url: /posts
-
-    expect:
-      status: 200
-
-  - name: Query Posts by User
+  # -------------------------
+  # QUERY PARAMS
+  # -------------------------
+  - name: Get Posts by User
     request:
       method: GET
       url: /posts
       query:
         userId: 1
-
     expect:
       status: 200
 
+  # -------------------------
+  # POST (BODY + HEADERS)
+  # -------------------------
   - name: Create User
-    description: POST request with JSON body
-
     request:
       method: POST
       url: /users
@@ -62,11 +53,14 @@ tests:
       body:
         name: "Piyush"
         username: "asura"
-        email: "piyush@example.com"
-
     expect:
       status: 201
+      body:
+        contains: "id"
 
+  # -------------------------
+  # PUT / PATCH / DELETE
+  # -------------------------
   - name: Update User
     request:
       method: PUT
@@ -75,7 +69,6 @@ tests:
         Content-Type: application/json
       body:
         name: "Updated Name"
-
     expect:
       status: 200
 
@@ -87,7 +80,6 @@ tests:
         Content-Type: application/json
       body:
         name: "Patched Name"
-
     expect:
       status: 200
 
@@ -95,51 +87,49 @@ tests:
     request:
       method: DELETE
       url: /users/1
-
     expect:
       status: 200
 
-  - name: Comments with Query
-    request:
-      method: GET
-      url: /comments
-      query:
-        postId: 1
-
-    expect:
-      status: 200
-
-  - name: Albums Endpoint
-    request:
-      method: GET
-      url: /albums
-
-    expect:
-      status: 200
-
+  # -------------------------
+  # RESPONSE TIME CHECKS
+  # -------------------------
   - name: Performance Check (Loose)
     request:
       method: GET
       url: /posts
-
     expect:
       status: 200
-      responseTime: 800
+      responseTime: 800   # should PASS
 
   - name: Performance Check (Strict)
     request:
       method: GET
       url: /posts
-
     expect:
       status: 200
-      responseTime: 50
+      responseTime: 50    # should DELAY
 
-  - name: Intentional Status Failure
+  # -------------------------
+  # BODY EQUALS (STRICT MATCH)
+  # -------------------------
+  - name: Exact Body Match (Will Likely Fail)
+    request:
+      method: GET
+      url: /users/1
+    expect:
+      status: 200
+      body:
+        equals:
+          id: 1
+          name: "Leanne Graham"
+
+  # -------------------------
+  # INTENTIONAL FAILURES
+  # -------------------------
+  - name: Wrong Status Expectation
     request:
       method: GET
       url: /users
-
     expect:
       status: 404
 
@@ -147,6 +137,14 @@ tests:
     request:
       method: GET
       url: /non-existent-route
-
     expect:
       status: 404
+
+  - name: Body Contains Failure
+    request:
+      method: GET
+      url: /users/1
+    expect:
+      status: 200
+      body:
+        contains: "THIS_WILL_NOT_EXIST"
