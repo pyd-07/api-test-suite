@@ -1,4 +1,6 @@
-import {TestCase, RequestConfig, Headers, queryParams} from "@repo/core/types/test"
+import {TestCase} from "@repo/core/types/test"
+import {buildUrl} from "@repo/core/request/buildUrl"
+import {buildHeaders} from "@repo/core/request/buildHeaders"
 
 export async function runTestSuite(baseUrl: string, tests : TestCase[]) {
     let passCount = 0, failCount = 0, delayedCount = 0
@@ -16,7 +18,7 @@ export async function runTestSuite(baseUrl: string, tests : TestCase[]) {
             const res = await fetch(url, {
                 method: test.request.method,
                 headers: headers,
-                body: body
+                body: ["GET","HEAD"].includes(test.request.method)?undefined:body
             });
             const end = Date.now()
 
@@ -64,27 +66,4 @@ export async function runTestSuite(baseUrl: string, tests : TestCase[]) {
             console.log(`- ${test.name}`);
         }
     }
-}
-
-function buildUrl(baseUrl:string, requestUrl:string, query?: queryParams){
-    const url = new URL(requestUrl, baseUrl)
-    if(query){
-        for (const [key, value] of Object.entries(query)){
-            url.searchParams.append(key, String(value))
-        }
-    }
-    return url
-}
-
-function buildHeaders(request: RequestConfig){
-    let headers: Headers = request.headers || {}
-
-    // This is helper block added , because the fetch with header 'Content-Type' kept returning status code 500
-    // but the request with header 'content-type' successfully fulfilled the request
-    // hence I'll keep this helper block
-    if (request.body && !headers['content-type']){
-        headers['content-type'] = 'application/json'
-    }
-
-    return headers
 }
