@@ -99,7 +99,6 @@ tests:
       method: GET
       url: /posts
     expect:
-      status: 200
       responseTime: 800   # should PASS
 
   - name: Performance Check (Strict)
@@ -131,6 +130,7 @@ tests:
     request:
       method: GET
       url: /users
+      timeout: 1000
     expect:
       status: 404
 

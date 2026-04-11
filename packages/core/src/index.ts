@@ -1,14 +1,30 @@
-import {TestCase, FailedTest} from "@repo/core/types/test"
+import {TestCase, FailedTest, TestCaseSchema} from "./schema/schema"
 import {buildUrl} from "./request/buildUrl"
 import {buildHeaders} from "./request/buildHeaders"
 import {validate} from "./validate/validateResponse"
+import { ZodError } from "zod"
 
 export async function runTestSuite(baseUrl: string, tests : TestCase[]) {
     let passCount = 0, failCount = 0
     let failedTests: FailedTest[] = []
 
     for (const test of tests) {
+
         console.log(`\nRunning: ${test.name}`);
+
+        try {
+            TestCaseSchema.parse(test)
+        } catch (err){
+            if(err instanceof ZodError){
+                console.log(`[ERROR] ${test.name} Could not parse the test`);
+                failCount++
+                failedTests.push({
+                    name: test.name,
+                    reason: err.issues.map(e => `${e.path.join(".")}: ${e.message}`).join(", ")
+                });
+            }
+            continue
+        }
 
         const url = buildUrl(baseUrl, test.request.url, test.request.query)
         let body: any = test.request.body ? test.request.body : undefined
@@ -20,7 +36,7 @@ export async function runTestSuite(baseUrl: string, tests : TestCase[]) {
                 method: test.request.method,
                 headers: headers,
                 body: ["GET","HEAD"].includes(test.request.method)?undefined:body,
-                signal: test.request.timeout ? AbortSignal.timeout(test.request.timeout) : null
+                signal: test.request.timeout ? AbortSignal.timeout(test.request.timeout) : AbortSignal.timeout(5000)
             });
             const end = Date.now()
 
@@ -41,7 +57,7 @@ export async function runTestSuite(baseUrl: string, tests : TestCase[]) {
 
 
         } catch (err) {
-            console.log(`ERROR ${test.name} (${err})`);
+            console.log(`[ERROR] ${test.name} (${err})`);
             failCount++;
             failedTests.push({
                 name: test.name,

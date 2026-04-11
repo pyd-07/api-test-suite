@@ -1,6 +1,6 @@
-import {queryParams} from "@repo/core/types/test"
+import {QueryParams} from "../schema/schema"
 
-export function buildUrl(baseUrl:string, requestUrl:string, query?: queryParams){
+export function buildUrl(baseUrl:string, requestUrl:string, query?: QueryParams){
     const url = new URL(requestUrl, baseUrl)
     if(query){
         for (const [key, value] of Object.entries(query)){

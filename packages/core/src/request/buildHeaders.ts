@@ -1,4 +1,4 @@
-import {RequestConfig, Headers} from "@repo/core/types/test"
+import {RequestConfig, Headers} from "../schema/schema"
 
 
 export function buildHeaders(request: RequestConfig){

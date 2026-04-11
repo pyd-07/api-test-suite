@@ -1,4 +1,4 @@
-import {Expectation, ValidateTest} from "@repo/core/types/test"
+import {Expectation, ValidateTest} from "../schema/schema"
 
 export async function validate(response: Awaited< ReturnType<typeof fetch> >, expect: Expectation, responseTime: number) : Promise<ValidateTest> {
     const actualStatus = response.status

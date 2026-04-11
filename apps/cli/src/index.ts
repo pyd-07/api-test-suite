@@ -3,7 +3,7 @@
 import fs from "fs"
 import yaml from "js-yaml"
 import {runTestSuite} from "@repo/core"
-import {TestCase} from "@repo/core/types/test"
+import {TestCase} from "@repo/core/src/schema/schema"
 
 const args = process.argv.slice(2)
 
