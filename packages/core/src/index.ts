@@ -19,7 +19,8 @@ export async function runTestSuite(baseUrl: string, tests : TestCase[]) {
             const res = await fetch(url, {
                 method: test.request.method,
                 headers: headers,
-                body: ["GET","HEAD"].includes(test.request.method)?undefined:body
+                body: ["GET","HEAD"].includes(test.request.method)?undefined:body,
+                signal: test.request.timeout ? AbortSignal.timeout(test.request.timeout) : null
             });
             const end = Date.now()
 

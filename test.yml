@@ -17,6 +17,7 @@ tests:
     request:
       method: GET
       url: /users/1
+      timeout: 100
     expect:
       status: 200
       body:
