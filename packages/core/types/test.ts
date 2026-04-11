@@ -41,5 +41,10 @@ export interface TestCase {
 
 export interface FailedTest {
     name: string
-    reason: string
+    reason: string | undefined
+}
+
+export interface ValidateTest {
+    isPass: boolean,
+    failReason?: string
 }

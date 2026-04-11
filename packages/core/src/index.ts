@@ -1,9 +1,10 @@
 import {TestCase, FailedTest} from "@repo/core/types/test"
 import {buildUrl} from "./request/buildUrl"
 import {buildHeaders} from "./request/buildHeaders"
+import {validate} from "./validate/validateResponse"
 
 export async function runTestSuite(baseUrl: string, tests : TestCase[]) {
-    let passCount = 0, failCount = 0, delayedCount = 0
+    let passCount = 0, failCount = 0
     let failedTests: FailedTest[] = []
 
     for (const test of tests) {
@@ -22,59 +23,18 @@ export async function runTestSuite(baseUrl: string, tests : TestCase[]) {
             });
             const end = Date.now()
 
-            const expected = test.expect.status
-            const actual = res.status
             const responseTime = end - start
-            const text = await res.text()
+            const resValidated = await validate(res, test.expect, responseTime)
 
-            let isPass = true
-            let failReason = ""
-
-            // status check
-            if(actual !== expected){
-                isPass = false
-                failReason = `expected ${expected}, got ${actual}`
-            }
-
-            // body validation
-            if(isPass && test.expect.body?.contains){                                   // partial match [contains]
-                if(!text.includes(test.expect.body.contains)){
-                    isPass = false
-                    failReason = `body does not contain ${test.expect.body.contains}`
-                }
-            }
-            if(isPass && test.expect.body?.equals){                                     // exact match []
-                try{
-                    const parsed = JSON.parse(text)
-                    if(JSON.stringify(parsed) !== JSON.stringify(test.expect.body.equals)){
-                        isPass = false
-                        failReason = `body does not match expected`
-                    }
-                } catch {
-                    isPass = false
-                    failReason = `failed to parse the reponse`
-                }
-            }
-
-            if (isPass) {
-                if(test.expect.responseTime){
-                    if(responseTime <= test.expect.responseTime){
-                        console.log(`[PASS] ${test.name} (${actual}) ResponseTime: ${responseTime}ms`)
-                        passCount++;
-                    } else {
-                        console.log(`[DELAY] ${test.name} (${actual}) ResponseTime: (expected ${test.expect.responseTime}, got ${responseTime})ms`)
-                        delayedCount++
-                    }
-                } else  {
-                    console.log(`[PASS] ${test.name} (${actual}) ResponseTime: ${responseTime}ms`)
-                    passCount++;
-                }
+            if (resValidated.isPass) {
+                console.log(`[PASS] ${test.name} | ResponseTime: ${responseTime}ms`)
+                passCount++
             } else {
                 console.log(`[FAIL] ${test.name}`);
                 failCount++;
                 failedTests.push({
                     name: test.name,
-                    reason: failReason
+                    reason: resValidated.failReason
                 });
             }
 
@@ -92,9 +52,8 @@ export async function runTestSuite(baseUrl: string, tests : TestCase[]) {
 
 
     console.log("\n--- Test Summary ---");
-    console.log(`Total: ${passCount + failCount + delayedCount}`);
+    console.log(`Total: ${passCount + failCount}`);
     console.log(`Passed: ${passCount}`);
-    console.log(`Delayed: ${delayedCount}`);
     console.log(`Failed: ${failCount}`);
 
     if (failedTests.length > 0) {
