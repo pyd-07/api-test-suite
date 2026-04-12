@@ -4,115 +4,9 @@ baseUrl: https://jsonplaceholder.typicode.com
 
 tests:
   # -------------------------
-  # BASIC GET
+  # MIXED VALIDATIONS
   # -------------------------
-  - name: Get All Users
-    request:
-      method: GET
-      url: /users
-    expect:
-      status: 200
-
-  - name: Get Single User
-    request:
-      method: GET
-      url: /users/1
-      timeout: 100
-    expect:
-      status: 200
-      body:
-        contains: "Leanne Graham"
-
-  - name: Invalid User
-    request:
-      method: GET
-      url: /users/9999
-    expect:
-      status: 404
-
-  # -------------------------
-  # QUERY PARAMS
-  # -------------------------
-  - name: Get Posts by User
-    request:
-      method: GET
-      url: /posts
-      query:
-        userId: 1
-    expect:
-      status: 200
-
-  # -------------------------
-  # POST (BODY + HEADERS)
-  # -------------------------
-  - name: Create User
-    request:
-      method: POST
-      url: /users
-      headers:
-        Content-Type: application/json
-      body:
-        name: "Piyush"
-        username: "asura"
-    expect:
-      status: 201
-      body:
-        contains: "id"
-
-  # -------------------------
-  # PUT / PATCH / DELETE
-  # -------------------------
-  - name: Update User
-    request:
-      method: PUT
-      url: /users/1
-      headers:
-        Content-Type: application/json
-      body:
-        name: "Updated Name"
-    expect:
-      status: 200
-
-  - name: Patch User
-    request:
-      method: PATCH
-      url: /users/1
-      headers:
-        Content-Type: application/json
-      body:
-        name: "Patched Name"
-    expect:
-      status: 200
-
-  - name: Delete User
-    request:
-      method: DELETE
-      url: /users/1
-    expect:
-      status: 200
-
-  # -------------------------
-  # RESPONSE TIME CHECKS
-  # -------------------------
-  - name: Performance Check (Loose)
-    request:
-      method: GET
-      url: /posts
-    expect:
-      responseTime: 800   # should PASS
-
-  - name: Performance Check (Strict)
-    request:
-      method: GET
-      url: /posts
-    expect:
-      status: 200
-      responseTime: 50    # should DELAY
-
-  # -------------------------
-  # BODY EQUALS (STRICT MATCH)
-  # -------------------------
-  - name: Exact Body Match (Will Likely Fail)
+  - name: User Basic Validation
     request:
       method: GET
       url: /users/1
@@ -121,31 +15,166 @@ tests:
       body:
         equals:
           id: 1
-          name: "Leanne Graham"
 
-  # -------------------------
-  # INTENTIONAL FAILURES
-  # -------------------------
-  - name: Wrong Status Expectation
-    request:
-      method: GET
-      url: /users
-      timeout: 1000
-    expect:
-      status: 404
-
-  - name: Missing Endpoint
-    request:
-      method: GET
-      url: /non-existent-route
-    expect:
-      status: 404
-
-  - name: Body Contains Failure
+  - name: User Contains Validation
     request:
       method: GET
       url: /users/1
     expect:
       status: 200
       body:
-        contains: "THIS_WILL_NOT_EXIST"
+        contains: "Leanne"
+
+  # -------------------------
+  # CHANGING RESPONSE SIZE
+  # -------------------------
+  - name: Posts List - Large Response
+    request:
+      method: GET
+      url: /posts
+    expect:
+      status: 200
+      responseTime: 1000
+
+  - name: Comments Query Dynamic
+    request:
+      method: GET
+      url: /comments
+      query:
+        postId: 2
+    expect:
+      status: 200
+
+  # -------------------------
+  # MULTIPLE METHODS SAME RESOURCE
+  # -------------------------
+  - name: Create User Dynamic
+    request:
+      method: POST
+      url: /users
+      body:
+        name: "Dynamic User"
+        timestamp: 123456
+    expect:
+      status: 201
+
+  - name: Update User Dynamic
+    request:
+      method: PUT
+      url: /users/1
+      body:
+        name: "Updated Dynamic"
+    expect:
+      status: 200
+
+  - name: Patch User Dynamic
+    request:
+      method: PATCH
+      url: /users/1
+      body:
+        updated: true
+    expect:
+      status: 200
+
+  # -------------------------
+  # EDGE CASES
+  # -------------------------
+  - name: Empty Query
+    request:
+      method: GET
+      url: /posts
+      query: {}
+    expect:
+      status: 200
+
+  - name: Non Existing Route
+    request:
+      method: GET
+      url: /this-route-does-not-exist
+    expect:
+      status: 404
+
+  # -------------------------
+  # COMBINED VALIDATION
+  # -------------------------
+  - name: Combined Status + Body + Performance
+    request:
+      method: GET
+      url: /users/2
+    expect:
+      status: 200
+      responseTime: 800
+      body:
+        equals:
+          id: 2
+
+  # -------------------------
+  # FAILURE SCENARIOS
+  # -------------------------
+  - name: Wrong Body Expectation
+    request:
+      method: GET
+      url: /users/1
+    expect:
+      status: 200
+      body:
+        equals:
+          id: 999
+
+  - name: Wrong Status Expectation
+    request:
+      method: GET
+      url: /users
+    expect:
+      status: 500
+
+  # -------------------------
+  # MULTIPLE QUICK CALLS (simulate load)
+  # -------------------------
+  - name: Quick Call 1
+    request:
+      method: GET
+      url: /albums
+    expect:
+      status: 200
+
+  - name: Quick Call 2
+    request:
+      method: GET
+      url: /albums
+    expect:
+      status: 200
+
+  - name: Quick Call 3
+    request:
+      method: GET
+      url: /albums
+    expect:
+      status: 200
+
+  # -------------------------
+  # STRING VARIATION TEST
+  # -------------------------
+  - name: Case Sensitive Contains
+    request:
+      method: GET
+      url: /users/1
+    expect:
+      status: 200
+      body:
+        contains: "leanne graham"  # should FAIL (case mismatch)
+
+  # -------------------------
+  # STRESS BODY CHECK
+  # -------------------------
+  - name: Deep Field Check
+    request:
+      method: GET
+      url: /users/1
+    expect:
+      status: 200
+      body:
+        equals:
+          address:
+            geo:
+              lat: "-37.3159"

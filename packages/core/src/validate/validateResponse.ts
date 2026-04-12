@@ -1,4 +1,5 @@
 import {Expectation, ValidateTest} from "../schema/schema"
+import {deepMatch} from "../utils/deepMatch"
 
 export async function validate(response: Awaited< ReturnType<typeof fetch> >, expect: Expectation, responseTime: number) : Promise<ValidateTest> {
     const actualStatus = response.status
@@ -16,7 +17,7 @@ export async function validate(response: Awaited< ReturnType<typeof fetch> >, ex
     }
     // body validation
     if ( validation.isPass && expect.body?.contains ){
-        if (!resText.includes(expect.body.contains)){
+        if (!resText.toLowerCase().includes(expect.body.contains.toLowerCase())){
             validation.isPass = false
             validation.failReason = `body does not contain ${expect.body.contains}`
         }
@@ -24,7 +25,7 @@ export async function validate(response: Awaited< ReturnType<typeof fetch> >, ex
     if (validation.isPass && expect.body?.equals){
         try {
             const parsed = JSON.parse(resText)
-            if (JSON.stringify(parsed) !== JSON.stringify(expect.body.equals)){
+            if (!deepMatch(parsed, expect.body.equals)){
                 validation.isPass = false
                 validation.failReason = `body does not match expected`
             }

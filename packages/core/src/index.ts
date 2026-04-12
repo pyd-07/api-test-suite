@@ -47,7 +47,7 @@ export async function runTestSuite(baseUrl: string, tests : TestCase[]) {
                 console.log(`[PASS] ${test.name} | ResponseTime: ${responseTime}ms`)
                 passCount++
             } else {
-                console.log(`[FAIL] ${test.name}`);
+                console.log(`[FAIL] ${test.name} (${resValidated.failReason})`);
                 failCount++;
                 failedTests.push({
                     name: test.name,
