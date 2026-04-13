@@ -1,0 +1,41 @@
+import {TestCase, ValidateTest} from "../schema/schema"
+import {buildUrl} from "../request/buildUrl"
+import {buildHeaders} from "../request/buildHeaders"
+import {validate} from "../validate/validateResponse"
+
+export async function runTest(baseUrl: string, test: TestCase): Promise< ValidateTest >  {
+    
+    const url = buildUrl(baseUrl, test.request.url, test.request.query)
+    let body: any = test.request.body ? test.request.body : undefined
+    let headers = buildHeaders(test.request)
+
+    try {
+        const start = Date.now()
+        const res = await fetch(url, {
+                method: test.request.method,
+                headers: headers,
+                body: ["GET","HEAD"].includes(test.request.method)?undefined:body,
+                signal: test.request.timeout ? AbortSignal.timeout(test.request.timeout) : AbortSignal.timeout(5000)
+            });
+        const end = Date.now()
+
+        const responseTime = end - start
+        const resValidated =  await validate(res, test.expect, responseTime)
+
+        // logging 
+        if (resValidated.stat === "pass"){
+            console.log(`[PASS] ${test.name} | ResponseTime: ${responseTime}ms`)
+        } else {
+            console.log(`[FAIL] ${test.name} (${resValidated.failReason})`)
+        }
+        
+        return resValidated
+
+    } catch (err) {
+        console.log(`[ERROR] ${test.name} (${err})`)
+        return ({
+            stat: "fail",
+            failReason: String(err)
+        })
+    }
+}

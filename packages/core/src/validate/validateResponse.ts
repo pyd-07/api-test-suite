@@ -7,38 +7,38 @@ export async function validate(response: Awaited< ReturnType<typeof fetch> >, ex
 
     const resText = await response.text()
 
-    let validation: ValidateTest ={ isPass: true }
-
+    let validation: ValidateTest ={ stat: "pass" }
 
     // status check 
     if (actualStatus !== expectedStatus){
-        validation.isPass = false
+        validation.stat = "fail"
         validation.failReason = `expected ${expectedStatus}, got ${actualStatus}`
     }
+
     // body validation
-    if ( validation.isPass && expect.body?.contains ){
+    if ( validation.stat === "pass" && expect.body?.contains ){
         if (!resText.toLowerCase().includes(expect.body.contains.toLowerCase())){
-            validation.isPass = false
+            validation.stat = "fail"
             validation.failReason = `body does not contain ${expect.body.contains}`
         }
     }
-    if (validation.isPass && expect.body?.equals){
+    if (validation.stat === "pass" && expect.body?.equals){
         try {
             const parsed = JSON.parse(resText)
             if (!deepMatch(parsed, expect.body.equals)){
-                validation.isPass = false
+                validation.stat = "fail"
                 validation.failReason = `body does not match expected`
             }
         } catch {
-            validation.isPass = false
+            validation.stat = "fail"
             validation.failReason = `failed to parse the response`
         }
     }
 
     // response time validation
-    if (validation.isPass) {
+    if (validation.stat === "pass" ) {
         if(expect.responseTime && expect.responseTime < responseTime){
-           validation.isPass = false
+           validation.stat = "fail"
            validation.failReason = `delayed response (expected ${expect.responseTime}ms, got ${responseTime}ms)`
         }
     }

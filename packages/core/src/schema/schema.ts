@@ -62,7 +62,8 @@ export interface FailedTest {
     reason: string | undefined
 }
 
-export interface ValidateTest {
-    isPass: boolean,
-    failReason?: string
-}
+export const ValidateTestSchema = z.object({
+    stat: z.enum(["pass", "fail"]), // can add delay option too, but I'm too lazy to implement that
+    failReason: z.string().optional()
+})
+export type ValidateTest = z.infer<typeof ValidateTestSchema>
