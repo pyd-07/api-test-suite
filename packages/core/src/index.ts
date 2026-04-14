@@ -1,50 +1,20 @@
-import {TestCase, FailedTest, TestCaseSchema} from "./schema/schema"
-import {validateTest} from "./validate/validateTest"
-import {runTest} from "./runner/runner"
+import {TestCase} from "./schema/schema"
+import {runWithConcurrency} from "./utils/concurrency"
+import { runTest } from "./runner/runner"
 
 export async function runTestSuite(baseUrl: string, tests : TestCase[]) {
-    let passCount = 0, failCount = 0
-    let failedTests: FailedTest[] = []
+    const results = await runWithConcurrency(baseUrl, tests, 10, runTest)
 
-    for (const test of tests) {
-
-        console.log(`\nRunning: ${test.name}`);
-
-        try {
-            const testValidated = validateTest(test)
-            if (!(testValidated.stat === "pass")){
-              failCount++
-              failedTests.push({name: test.name, reason: testValidated.failReason})  
-            } else {       
-                const resValidated = await runTest(baseUrl, test)
-                if (resValidated.stat === "pass"){
-                    passCount ++
-                } else {
-                    failCount++
-                    failedTests.push({name: test.name, reason: resValidated.failReason})
-                }
-            }
-        } catch (err) {
-            console.log(`[ERROR] ${test.name} (${err})`);
-            failCount++;
-            failedTests.push({
-                name: test.name,
-                reason: String(err)
-            });
-        }
-    }
-
-
-
+    const FailedTests = results.filter((result) => result.stat==="fail")
+    const failCount = FailedTests.length
     console.log("\n--- Test Summary ---");
-    console.log(`Total: ${passCount + failCount}`);
-    console.log(`Passed: ${passCount}`);
+    console.log(`Total: ${results.length}`);
+    console.log(`Passed: ${results.length - failCount}`);
     console.log(`Failed: ${failCount}`);
 
-    if (failedTests.length > 0) {
-        console.log("\nFailed Tests:");
-        for (const test of failedTests) {
-            console.log(`- ${test.name} ( ${test.reason} )`);
-        }
+    console.log("\nFailed Tests:")
+    for (const test of FailedTests){
+        console.log(`- ${test.name} (${test.failReason})`)
     }
+
 }

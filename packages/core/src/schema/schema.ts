@@ -57,13 +57,15 @@ export const TestCaseSchema = z.object({
 })
 export type TestCase = z.infer<typeof TestCaseSchema>
 
-export interface FailedTest {
-    name: string
-    reason: string | undefined
-}
-
 export const ValidateTestSchema = z.object({
+    name: z.string(),
     stat: z.enum(["pass", "fail"]), // can add delay option too, but I'm too lazy to implement that
     failReason: z.string().optional()
 })
-export type ValidateTest = z.infer<typeof ValidateTestSchema>
+export type ValidatedTest = z.infer<typeof ValidateTestSchema>
+
+export const ValidateResponseSchema = z.object({
+    stat: z.enum(["pass", "fail"]), // can add delay option too, but I'm too lazy to implement that
+    failReason: z.string().optional()
+})
+export type ValidatedResponse = z.infer<typeof ValidateResponseSchema>

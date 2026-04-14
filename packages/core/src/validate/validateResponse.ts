@@ -1,13 +1,13 @@
-import {Expectation, ValidateTest} from "../schema/schema"
+import {Expectation, ValidatedResponse} from "../schema/schema"
 import {deepMatch} from "../utils/deepMatch"
 
-export async function validate(response: Awaited< ReturnType<typeof fetch> >, expect: Expectation, responseTime: number) : Promise<ValidateTest> {
+export async function validate(response: Awaited< ReturnType<typeof fetch> >, expect: Expectation, responseTime: number) : Promise<ValidatedResponse> {
     const actualStatus = response.status
     const expectedStatus = expect.status
 
     const resText = await response.text()
 
-    let validation: ValidateTest ={ stat: "pass" }
+    let validation: ValidatedResponse ={ stat: "pass" }
 
     // status check 
     if (actualStatus !== expectedStatus){

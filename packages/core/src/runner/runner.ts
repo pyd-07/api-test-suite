@@ -1,15 +1,19 @@
-import {TestCase, ValidateTest} from "../schema/schema"
+import {TestCase, ValidatedTest} from "../schema/schema"
 import {buildUrl} from "../request/buildUrl"
 import {buildHeaders} from "../request/buildHeaders"
+import {validateTest} from "../validate/validateTest"
 import {validate} from "../validate/validateResponse"
 
-export async function runTest(baseUrl: string, test: TestCase): Promise< ValidateTest >  {
-    
-    const url = buildUrl(baseUrl, test.request.url, test.request.query)
-    let body: any = test.request.body ? test.request.body : undefined
-    let headers = buildHeaders(test.request)
+export async function runTest(baseUrl: string, test: TestCase): Promise< ValidatedTest >  {
 
     try {
+
+        validateTest(test)
+
+        const url = buildUrl(baseUrl, test.request.url, test.request.query)
+        let body: any = test.request.body ? test.request.body : undefined
+        let headers = buildHeaders(test.request)
+
         const start = Date.now()
         const res = await fetch(url, {
                 method: test.request.method,
@@ -29,11 +33,16 @@ export async function runTest(baseUrl: string, test: TestCase): Promise< Validat
             console.log(`[FAIL] ${test.name} (${resValidated.failReason})`)
         }
         
-        return resValidated
+        return ({
+            name: test.name,
+            stat: resValidated.stat,
+            failReason: resValidated.failReason
+        })
 
     } catch (err) {
         console.log(`[ERROR] ${test.name} (${err})`)
         return ({
+            name: test.name,
             stat: "fail",
             failReason: String(err)
         })
