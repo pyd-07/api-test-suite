@@ -7,6 +7,16 @@ import {TestCase} from "@repo/core/src/schema/schema"
 
 const args = process.argv.slice(2)
 
+const concurrencyIndex = args.indexOf("--concurrency")
+let concurrency = 5 // default 
+if (concurrencyIndex !== -1){
+    const value = args[concurrencyIndex+1]
+    concurrency = Number(value)
+}
+if (isNaN(concurrency) || concurrency <= 0){
+    throw new Error("Concurrency should be a number > 0")
+}
+
 async function runTests(file: string) {
     try {
         const fileContent = fs.readFileSync(file, "utf-8")
@@ -20,7 +30,7 @@ async function runTests(file: string) {
             process.exit(1)
         }
 
-        runTestSuite(baseUrl, tests)
+        runTestSuite(baseUrl, tests, concurrency)
 
     } catch (error) {
         console.error(`Error Reading ${file}: ${error}`)
