@@ -26,8 +26,6 @@ export const RequestSchema = z.object({
     query: QueryParamsSchema.optional(),
     headers: HeadersSchema.optional(),
     body: z.any().optional(),
-
-    timeout: z.number().optional()
 })
 export type RequestConfig = z.infer<typeof RequestSchema>
 
@@ -44,6 +42,7 @@ export const ExpectationSchema = z.object({
     headers: HeadersSchema.optional(),
     body: BodyExpectationSchema.optional(),
 
+    timeout: z.number().optional(),
     responseTime: z.number().optional()
 })
 export type Expectation = z.infer<typeof ExpectationSchema>

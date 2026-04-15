@@ -1,159 +1,223 @@
-# Turborepo starter
 
-This Turborepo starter is maintained by the Turborepo core team.
+---
 
-## Using this example
 
-Run the following command:
+# API Testing Suite
 
-```sh
-npx create-turbo@latest
+A CLI-based API testing tool built with TypeScript in a TurboRepo monorepo.
+
+Define API tests using YAML, execute them in parallel with configurable concurrency, and validate responses using deep matching and schema validation. Designed for performance, reliability, and clean architecture.
+
+---
+
+## Features
+
+- YAML-based test definitions for simple and readable test cases  
+- Parallel test execution with configurable concurrency control  
+- Deep partial response matching (nested object validation)  
+- Response time assertions with PASS / DELAY classification  
+- Timeout handling using AbortSignal to prevent hanging requests  
+- Schema validation using Zod for strict input validation  
+- Support for headers, query parameters, and request bodies  
+- Deterministic result ordering even under parallel execution  
+- Clean CLI output with structured test summaries  
+- Modular architecture separating CLI and core engine  
+
+---
+
+## Architecture
+
 ```
 
-## What's inside?
+apps/
+└── cli/        # CLI interface
 
-This Turborepo includes the following packages/apps:
+packages/
+└── core/       # Test engine (execution, validation, concurrency)
 
-### Apps and Packages
+````
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+---
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+## Installation
 
-### Utilities
+```bash
+git clone https://github.com/pyd-07/api-test-suite.git
+cd api-testing-suite
+npm install
+npm run build
+````
 
-This Turborepo has some additional tools already setup for you:
+(Optional: link CLI globally)
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```bash
+npm link
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo build
-npm dlx turbo build
-npm exec turbo build
+## Usage
+
+```bash
+suite run test.yml
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+With concurrency control:
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
+```bash
+suite run test.yml --concurrency 5
 ```
 
-Without global `turbo`:
+---
 
-```sh
-npx turbo build --filter=docs
-npm exec turbo build --filter=docs
-npm exec turbo build --filter=docs
+## Example Test File
+
+```yaml
+version: 1
+
+baseUrl: https://jsonplaceholder.typicode.com
+
+tests:
+  - name: Get User
+    request:
+      method: GET
+      url: /users/1
+    expect:
+      status: 200
+      responseTime: 500
+      body:
+        equals:
+          id: 1
+          name: "Leanne Graham"
 ```
 
-### Develop
+---
 
-To develop all apps and packages, run the following command:
+## Assertions
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+### Status Code
 
-```sh
-cd my-turborepo
-turbo dev
+```yaml
+expect:
+  status: 200
 ```
 
-Without global `turbo`, use your package manager:
+### Response Time
 
-```sh
-cd my-turborepo
-npx turbo dev
-npm exec turbo dev
-npm exec turbo dev
+```yaml
+expect:
+  responseTime: 500
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+### Deep Partial Matching
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
+```yaml
+expect:
+  body:
+    equals:
+      id: 1
+      address:
+        city: "Gwenborough"
 ```
 
-Without global `turbo`:
+Matches nested fields and ignores extra fields in the response.
 
-```sh
-npx turbo dev --filter=web
-npm exec turbo dev --filter=web
-npm exec turbo dev --filter=web
+### Contains (string match)
+
+```yaml
+expect:
+  body:
+    contains: "Leanne"
 ```
 
-### Remote Caching
+---
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+## Request Configuration
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
+```yaml
+request:
+  method: POST
+  url: /users
+  headers:
+    Content-Type: application/json
+  query:
+    userId: 1
+  body:
+    name: "Piyush"
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo login
-npm exec turbo login
-npm exec turbo login
+## Timeout Handling
+
+```yaml
+expect:
+  timeout: 2000
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+Aborts the request if it exceeds the defined limit and marks it as TIMEOUT.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+## Output Example
 
-```sh
-turbo link
+```
+Running: Get User
+[PASS] Get User (200) ResponseTime: 120ms
+
+Running: Performance Check
+[DELAY] Performance Check (200) ResponseTime: (expected 50, got 120)ms
+
+Running: Wrong Status
+[FAIL] Wrong Status (expected 404, got 200)
+
+--- Test Summary ---
+Total: 3
+Passed: 1
+Delayed: 1
+Failed: 1
 ```
 
-Without global `turbo`:
+---
 
-```sh
-npx turbo link
-npm exec turbo link
-npm exec turbo link
-```
+## Design Principles
 
-## Useful Links
+* Separation of concerns (CLI vs core engine)
+* Composable execution pipeline (runner, concurrency, validation)
+* Deterministic output under parallel execution
+* Minimal dependencies with scalable architecture
 
-Learn more about the power of Turborepo:
+---
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+## Roadmap
+
+* Retry system with smart retry conditions
+* Metrics (average, min, max response time)
+* JSON path-based assertions
+* Array matching support
+* Report generation (JSON / HTML)
+* Authentication support
+* Environment variable support
+
+---
+
+## Tech Stack
+
+* TypeScript
+* Node.js (Fetch API)
+* TurboRepo
+* Zod
+
+---
+
+## Contributing
+
+Contributions, issues, and feature suggestions are welcome.
+
+---
+
+## License
+
+MIT
+
+

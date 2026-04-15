@@ -13,13 +13,15 @@ export async function runTest(baseUrl: string, test: TestCase): Promise< Validat
         const url = buildUrl(baseUrl, test.request.url, test.request.query)
         let body: any = test.request.body ? test.request.body : undefined
         let headers = buildHeaders(test.request)
+        const timeout = test.expect.timeout ?? 5000
+        const hasBody = !["GET","HEAD"].includes(test.request.method)
 
         const start = Date.now()
         const res = await fetch(url, {
                 method: test.request.method,
                 headers: headers,
-                body: ["GET","HEAD"].includes(test.request.method)?undefined:body,
-                signal: test.request.timeout ? AbortSignal.timeout(test.request.timeout) : AbortSignal.timeout(5000)
+                body: hasBody?body:undefined,
+                signal: AbortSignal.timeout(timeout)
             });
         const end = Date.now()
 
