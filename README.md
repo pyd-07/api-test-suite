@@ -166,7 +166,7 @@ Running: Get User
 [PASS] Get User (200) ResponseTime: 120ms
 
 Running: Performance Check
-[DELAY] Performance Check (200) ResponseTime: (expected 50, got 120)ms
+[FAIL] Performance Check (200) ResponseTime: (expected 50, got 120)ms
 
 Running: Wrong Status
 [FAIL] Wrong Status (expected 404, got 200)
@@ -174,8 +174,7 @@ Running: Wrong Status
 --- Test Summary ---
 Total: 3
 Passed: 1
-Delayed: 1
-Failed: 1
+Failed: 2
 ```
 
 ---

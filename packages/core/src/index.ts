@@ -20,3 +20,5 @@ export async function runTestSuite(baseUrl: string, tests : TestCase[], concurre
     }
 
 }
+
+export * from "./utils/template"

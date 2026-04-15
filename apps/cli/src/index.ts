@@ -2,7 +2,9 @@
 
 import fs from "fs"
 import yaml from "js-yaml"
-import {runTestSuite} from "@repo/core"
+import dotenv from "dotenv"
+dotenv.config({debug: true})
+import { resolveObject, runTestSuite} from "@repo/core"
 import {TestCase} from "@repo/core/src/schema/schema"
 
 const args = process.argv.slice(2)
@@ -20,7 +22,9 @@ if (isNaN(concurrency) || concurrency <= 0){
 async function runTests(file: string) {
     try {
         const fileContent = fs.readFileSync(file, "utf-8")
-        const parsed: any = yaml.load(fileContent)
+
+        const raw: any = yaml.load(fileContent)
+        const parsed: any = resolveObject(raw)
 
         const baseUrl: string = parsed.baseUrl
         const tests: TestCase[] = parsed.tests

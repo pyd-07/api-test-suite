@@ -1,6 +1,6 @@
 version: 1
 
-baseUrl: https://jsonplaceholder.typicode.com
+baseUrl: ${BASE_URL}
 
 tests:
   # -------------------------
@@ -9,7 +9,7 @@ tests:
   - name: User Basic Validation
     request:
       method: GET
-      url: /users/1
+      url: /users/${USER_ID}
     expect:
       status: 200
       body:
@@ -53,7 +53,7 @@ tests:
       method: POST
       url: /users
       body:
-        name: "Dynamic User"
+        name: ${NAME}
         timestamp: 123456
     expect:
       status: 201
