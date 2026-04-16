@@ -1,10 +1,18 @@
 import {TestCase} from "./schema/schema"
 import {runWithConcurrency} from "./utils/concurrency"
 import { runTest } from "./runner/runner"
+import { runWithRetry } from "./utils/retry"
 
 export async function runTestSuite(baseUrl: string, tests : TestCase[], concurrency: number = 5) {
 
-    const results = await runWithConcurrency(baseUrl, tests, concurrency, runTest)
+    const worker = (baseUrl:string, test: TestCase) => {
+        return runWithRetry(
+            ()=>runTest(baseUrl,test),
+            test.expect.retries,
+            test.expect.retryDelay
+        )
+    }
+    const results = await runWithConcurrency(baseUrl, tests, concurrency, worker)
 
     const FailedTests = results.filter((result) => result.stat==="fail")
     const failCount = FailedTests.length

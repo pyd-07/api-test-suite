@@ -27,26 +27,23 @@ export async function runTest(baseUrl: string, test: TestCase): Promise< Validat
 
         const responseTime = end - start
         const resValidated =  await validate(res, test.expect, responseTime)
-
-        // logging 
-        if (resValidated.stat === "pass"){
-            console.log(`[PASS] ${test.name} | ResponseTime: ${responseTime}ms`)
-        } else {
-            console.log(`[FAIL] ${test.name} (${resValidated.failReason})`)
-        }
         
         return ({
             name: test.name,
             stat: resValidated.stat,
+            responseTime: responseTime,
             failReason: resValidated.failReason
         })
 
-    } catch (err) {
-        console.log(`[ERROR] ${test.name} (${err})`)
-        return ({
-            name: test.name,
-            stat: "fail",
-            failReason: String(err)
-        })
+    } catch (err: any) {
+        if (err.name === "TimeoutError" || err.name === "AbortError") {
+            throw { type: "TIMEOUT", message: "Request timed out" }
+        }
+
+        if (err instanceof TypeError) {
+            throw { type: "NETWORK", message: err.message }
+        }
+
+        throw { type: "UNKNOWN", message: String(err) }
     }
 }

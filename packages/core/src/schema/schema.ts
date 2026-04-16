@@ -43,6 +43,8 @@ export const ExpectationSchema = z.object({
     body: BodyExpectationSchema.optional(),
 
     timeout: z.number().optional(),
+    retries: z.number().optional(),
+    retryDelay: z.number().optional(),
     responseTime: z.number().optional()
 })
 export type Expectation = z.infer<typeof ExpectationSchema>
@@ -59,6 +61,7 @@ export type TestCase = z.infer<typeof TestCaseSchema>
 export const ValidateTestSchema = z.object({
     name: z.string(),
     stat: z.enum(["pass", "fail"]), // can add delay option too, but I'm too lazy to implement that
+    responseTime: z.number().optional(),
     failReason: z.string().optional()
 })
 export type ValidatedTest = z.infer<typeof ValidateTestSchema>
