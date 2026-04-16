@@ -1,7 +1,4 @@
 
----
-
-
 # API Testing Suite
 
 A CLI-based API testing tool built with TypeScript in a TurboRepo monorepo.
@@ -14,8 +11,8 @@ Define API tests using YAML, execute them in parallel with configurable concurre
 
 - YAML-based test definitions for simple and readable test cases  
 - Parallel test execution with configurable concurrency control  
+- Environment variable templating using `${VAR}` syntax  
 - Deep partial response matching (nested object validation)  
-- Response time assertions with PASS / DELAY classification  
 - Timeout handling using AbortSignal to prevent hanging requests  
 - Schema validation using Zod for strict input validation  
 - Support for headers, query parameters, and request bodies  
@@ -70,6 +67,51 @@ suite run test.yml --concurrency 5
 
 ---
 
+## Environment Variables
+
+You can use environment variables inside your YAML using `${VAR}` syntax.
+
+### Example `.env`
+
+```env
+BASE_URL=https://jsonplaceholder.typicode.com
+USER_ID=1
+NAME=Piyush
+```
+
+### Example YAML
+
+```yaml
+version: 1
+
+baseUrl: ${BASE_URL}
+
+tests:
+  - name: Get User
+    request:
+      method: GET
+      url: /users/${USER_ID}
+    expect:
+      status: 200
+
+  - name: Create User
+    request:
+      method: POST
+      url: /users
+      body:
+        name: ${NAME}
+    expect:
+      status: 201
+```
+
+### Notes
+
+* Variables are resolved before schema validation
+* Missing variables will throw an explicit error
+* Works across nested objects and arrays
+
+---
+
 ## Example Test File
 
 ```yaml
@@ -102,12 +144,16 @@ expect:
   status: 200
 ```
 
+---
+
 ### Response Time
 
 ```yaml
 expect:
   responseTime: 500
 ```
+
+---
 
 ### Deep Partial Matching
 
@@ -121,6 +167,8 @@ expect:
 ```
 
 Matches nested fields and ignores extra fields in the response.
+
+---
 
 ### Contains (string match)
 
@@ -155,7 +203,8 @@ expect:
   timeout: 2000
 ```
 
-Aborts the request if it exceeds the defined limit and marks it as TIMEOUT.
+* Aborts the request if it exceeds the defined limit
+* Marked as `TIMEOUT` in output
 
 ---
 
@@ -166,7 +215,7 @@ Running: Get User
 [PASS] Get User (200) ResponseTime: 120ms
 
 Running: Performance Check
-[FAIL] Performance Check (200) ResponseTime: (expected 50, got 120)ms
+[FAIL] Performance Check (200) (expected 50, got 120)ms
 
 Running: Wrong Status
 [FAIL] Wrong Status (expected 404, got 200)
@@ -192,11 +241,9 @@ Failed: 2
 
 * Retry system with smart retry conditions
 * Metrics (average, min, max response time)
-* JSON path-based assertions
 * Array matching support
 * Report generation (JSON / HTML)
 * Authentication support
-* Environment variable support
 
 ---
 
@@ -218,5 +265,4 @@ Contributions, issues, and feature suggestions are welcome.
 ## License
 
 MIT
-
 
