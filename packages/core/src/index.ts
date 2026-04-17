@@ -13,8 +13,8 @@ export async function runTestSuite(baseUrl: string, tests : TestCase[], concurre
     const worker = (baseUrl:string, test: TestCase) => {
         return runWithRetry(
             ()=>runTest(baseUrl,test),
-            test.expect.retries,
-            test.expect.retryDelay
+            test.retries,
+            test.retryDelay
         )
     }
 

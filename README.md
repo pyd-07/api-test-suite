@@ -19,6 +19,7 @@ Define API tests using YAML, execute them in parallel with configurable concurre
 - Support for headers, query parameters, and request bodies  
 - Deterministic result ordering even under parallel execution  
 - Structured CLI logging with categorized output (pass/fail/info/warn) and timestamps
+- JSON report generation with summary, metrics, and per-test results  
 - Modular architecture separating CLI and core engine  
 
 ---
@@ -219,10 +220,10 @@ tests:
     request:
       method: GET
       url: /users/1
+    retryDelay: 200
+    retries: 2
     expect:
       status: 200
-      retryDelay: 200
-      retries: 2
 ```
 
 * `retries`: Maximum number of retry attempts (default: 2)
@@ -253,35 +254,9 @@ The CLI uses structured and categorized logging for clear output.
 Logging is handled at the orchestration layer to prevent duplicate logs during retries.
 
 
+## CLI Output Preview
 
-## Output Example
-
-
-```console
-$ suite run test.yml
-┆ no encoding is specified (UTF-8 is used by default)
-◇ injected env (3) from .env // tip: ◈ encrypted .env [[www.dotenvx.com](https://www.dotenvx.com)]
-◐ Running suite with 5 workers                                                               12:43:43 pm
-✔ [PASS] User Basic Validation | 810ms                                                       12:43:44 pm
-✔ [PASS] Posts List - Large Response | 799ms                                                 12:43:44 pm
-
-  ERROR  [FAIL] Create User Dynamic (expected 201, got 500)                                  12:43:44 pm
-  ERROR  [FAIL] Wrong Body Expectation (body does not match expected)                        12:43:44 pm
-
-✔ [PASS] Deep Field Check | 93ms                                                             12:43:44 pm
-ℹ                                                                                            12:43:44 pm
---- Test Summary ---
-◐ Total: 5                                                                                   12:43:44 pm
-ℹ Passed: 3                                                                                  12:43:44 pm
-
-  WARN  Failed: 2                                                                            12:43:44 pm
-
-Failed Tests:
-
-  ERROR  - Create User Dynamic (expected 201, got 500)                                       12:43:44 pm
-  ERROR  - Wrong Body Expectation (body does not match expected)                             12:43:44 pm
-```
-
+![CLI Output](./assets/cli-output.png)
 ---
 
 ## Design Principles
@@ -295,9 +270,7 @@ Failed Tests:
 
 ## Roadmap
 
-* Metrics (average, min, max response time)
 * Array matching support
-* Report generation (JSON / HTML)
 * Authentication support
 
 ---
@@ -308,6 +281,24 @@ Failed Tests:
 * Node.js (Fetch API)
 * TurboRepo
 * Zod
+
+---
+
+## Development Notes
+
+This project was built with the assistance of AI tools to accelerate development and experimentation.
+
+AI was primarily used for:
+- Generating initial implementations for isolated components
+- Exploring alternative approaches to logging, concurrency, and validation
+- Speeding up iteration during feature development
+
+All architectural decisions, system design, and final integrations were implemented and reviewed manually to ensure correctness, maintainability, and consistency across the codebase.
+
+The goal of this project is not just functionality, but to demonstrate strong understanding of:
+- System design (execution pipeline, retries, concurrency)
+- Clean architecture (separation of CLI and core engine)
+- Developer tooling and usability
 
 ---
 

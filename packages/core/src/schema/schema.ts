@@ -43,8 +43,6 @@ export const ExpectationSchema = z.object({
     body: BodyExpectationSchema.optional(),
 
     timeout: z.number().optional(),
-    retries: z.number().optional(),
-    retryDelay: z.number().optional(),
     responseTime: z.number().optional()
 })
 export type Expectation = z.infer<typeof ExpectationSchema>
@@ -54,6 +52,8 @@ export const TestCaseSchema = z.object({
     description: z.string().optional(),
 
     request: RequestSchema,
+    retries: z.number().optional(),
+    retryDelay: z.number().optional(),
     expect: ExpectationSchema
 })
 export type TestCase = z.infer<typeof TestCaseSchema>
