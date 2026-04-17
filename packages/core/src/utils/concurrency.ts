@@ -1,5 +1,3 @@
-import { log } from "../logger/logger"
-import { logger } from "../logger/wrapper"
 import {TestCase, ValidatedTest} from "../schema/schema"
 
 export async function runWithConcurrency(
@@ -11,7 +9,6 @@ export async function runWithConcurrency(
     
     const results: ValidatedTest[] = new Array(items.length)
     let index = 0
-    logger.start(`Running suite with ${limit} workers`)
 
     async function runWorker() {
         while (true) {
@@ -28,7 +25,6 @@ export async function runWithConcurrency(
                     failReason: err.message || String(err)
                 };
             }
-            log(results[currentIndex])
         }
     }
 

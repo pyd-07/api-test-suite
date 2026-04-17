@@ -3,10 +3,14 @@ import chalk from "chalk";
 
 export const logger = {
     pass: (name:string, time:number|undefined) => {
-        consola.success(`${chalk.green("[PASS]")} ${name} | ${time}ms`)
+        const tag = chalk.bgGreen.black.bold(" PASS ")
+        const timeStr = time !== undefined ? chalk.dim(` ${time}ms`) : ""
+        consola.log(`  ${tag}  ${name}${timeStr}`)
     },
     fail: (name:string, reason?:string) => {
-        consola.error(`${chalk.red("[FAIL]")} ${name} ${reason?`(${chalk.redBright(reason)})`:""}`)
+        const tag = chalk.bgRed.white.bold(" FAIL ")
+        const reasonStr = reason ? chalk.dim(` → ${chalk.redBright(reason)}`) : ""
+        consola.log(`  ${tag}  ${name}${reasonStr}`)
     },
     info: (msg:string) => {
         consola.info(msg)
@@ -19,5 +23,8 @@ export const logger = {
     },
     error: (msg:string) => {
         consola.error(msg)
+    },
+    divider: () => {
+        console.log(chalk.dim("  " + "─".repeat(60)))
     }
 }
