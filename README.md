@@ -11,13 +11,14 @@ Define API tests using YAML, execute them in parallel with configurable concurre
 
 - YAML-based test definitions for simple and readable test cases  
 - Parallel test execution with configurable concurrency control  
+- Retry mechanism for transient failures (network/timeouts)  
 - Environment variable templating using `${VAR}` syntax  
 - Deep partial response matching (nested object validation)  
 - Timeout handling using AbortSignal to prevent hanging requests  
 - Schema validation using Zod for strict input validation  
 - Support for headers, query parameters, and request bodies  
 - Deterministic result ordering even under parallel execution  
-- Clean CLI output with structured test summaries  
+- Structured CLI logging with categorized output (pass/fail/info/warn) and timestamps
 - Modular architecture separating CLI and core engine  
 
 ---
@@ -204,26 +205,81 @@ expect:
 ```
 
 * Aborts the request if it exceeds the defined limit
-* Marked as `TIMEOUT` in output
+* Timeout errors are treated as retryable failures (if retries are configured)
 
 ---
 
+## Retry Mechanism
+
+Tests can be configured to retry automatically on transient failures such as network errors or timeouts.
+
+```yaml
+tests:
+  - name: Retry Example
+    request:
+      method: GET
+      url: /users/1
+    expect:
+      status: 200
+      retryDelay: 200
+      retries: 2
+```
+
+* `retries`: Maximum number of retry attempts (default: 2)
+* `retryDelay`: Delay between retries in milliseconds (default: 200)
+* Retries only on network errors and timeouts
+* Final result shows total attempts and time
+
+---
+
+## Logging
+
+The CLI uses structured and categorized logging for clear output.
+
+### Log Types
+
+- `✔ PASS` → Test succeeded  
+- `ERROR [FAIL]` → Test failed with reason  
+- `WARN` → Summary warnings  
+- `ℹ` → Informational logs (setup, environment, workers)  
+
+### Features
+
+- Timestamped logs for each test execution  
+- Worker/concurrency visibility  
+- Environment injection visibility  
+- Failure grouping at the end of execution  
+
+Logging is handled at the orchestration layer to prevent duplicate logs during retries.
+
+
+
 ## Output Example
 
-```
-Running: Get User
-[PASS] Get User (200) ResponseTime: 120ms
 
-Running: Performance Check
-[FAIL] Performance Check (200) (expected 50, got 120)ms
+```console
+$ suite run test.yml
+┆ no encoding is specified (UTF-8 is used by default)
+◇ injected env (3) from .env // tip: ◈ encrypted .env [[www.dotenvx.com](https://www.dotenvx.com)]
+◐ Running suite with 5 workers                                                               12:43:43 pm
+✔ [PASS] User Basic Validation | 810ms                                                       12:43:44 pm
+✔ [PASS] Posts List - Large Response | 799ms                                                 12:43:44 pm
 
-Running: Wrong Status
-[FAIL] Wrong Status (expected 404, got 200)
+  ERROR  [FAIL] Create User Dynamic (expected 201, got 500)                                  12:43:44 pm
+  ERROR  [FAIL] Wrong Body Expectation (body does not match expected)                        12:43:44 pm
 
+✔ [PASS] Deep Field Check | 93ms                                                             12:43:44 pm
+ℹ                                                                                            12:43:44 pm
 --- Test Summary ---
-Total: 3
-Passed: 1
-Failed: 2
+◐ Total: 5                                                                                   12:43:44 pm
+ℹ Passed: 3                                                                                  12:43:44 pm
+
+  WARN  Failed: 2                                                                            12:43:44 pm
+
+Failed Tests:
+
+  ERROR  - Create User Dynamic (expected 201, got 500)                                       12:43:44 pm
+  ERROR  - Wrong Body Expectation (body does not match expected)                             12:43:44 pm
 ```
 
 ---
@@ -239,7 +295,6 @@ Failed: 2
 
 ## Roadmap
 
-* Retry system with smart retry conditions
 * Metrics (average, min, max response time)
 * Array matching support
 * Report generation (JSON / HTML)
