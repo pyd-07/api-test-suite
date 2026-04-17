@@ -1,10 +1,10 @@
-import {TestCase} from "./schema/schema"
+import {TestCase, ValidatedTest} from "./schema/schema"
 import {runWithConcurrency} from "./utils/concurrency"
 import { runTest } from "./runner/runner"
 import { runWithRetry } from "./utils/retry"
 import { logger } from "./logger/wrapper"
 
-export async function runTestSuite(baseUrl: string, tests : TestCase[], concurrency: number = 5) {
+export async function runTestSuite(baseUrl: string, tests : TestCase[], concurrency: number = 5): Promise<ValidatedTest[]> {
 
     const worker = (baseUrl:string, test: TestCase) => {
         return runWithRetry(
@@ -28,6 +28,8 @@ export async function runTestSuite(baseUrl: string, tests : TestCase[], concurre
         logger.error(`- ${test.name} (${test.failReason})`)
     }
 
+    return results
 }
 
+export * from "./report/report"
 export * from "./utils/template"

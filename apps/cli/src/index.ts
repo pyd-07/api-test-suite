@@ -4,7 +4,7 @@ import fs from "fs"
 import yaml from "js-yaml"
 import dotenv from "dotenv"
 dotenv.config({debug: true})
-import { resolveObject, runTestSuite} from "@repo/core"
+import { resolveObject, runTestSuite, generateReport, writeReportFile } from "@repo/core"
 import {TestCase} from "@repo/core/src/schema/schema"
 
 const args = process.argv.slice(2)
@@ -17,6 +17,16 @@ if (concurrencyIndex !== -1){
 }
 if (isNaN(concurrency) || concurrency <= 0){
     throw new Error("Concurrency should be a number > 0")
+}
+
+const reportIndex = args.indexOf("--report")
+let reportPath: string | undefined
+if (reportIndex !== -1){
+    reportPath = args[reportIndex + 1]
+    if (!reportPath){
+        console.error("--report requires a file path")
+        process.exit(1)
+    }
 }
 
 async function runTests(file: string) {
@@ -34,7 +44,14 @@ async function runTests(file: string) {
             process.exit(1)
         }
 
-        runTestSuite(baseUrl, tests, concurrency)
+        const startTime = Date.now()
+        const results = await runTestSuite(baseUrl, tests, concurrency)
+
+        if (reportPath) {
+            const duration = Date.now() - startTime
+            const report = generateReport(results, duration)
+            writeReportFile(report, reportPath)
+        }
 
     } catch (error) {
         console.error(`Error Reading ${file}: ${error}`)
