@@ -4,7 +4,7 @@ import fs from "fs"
 import yaml from "js-yaml"
 import dotenv from "dotenv"
 dotenv.config({debug: true})
-import { resolveObject, runTestSuite, generateReport, writeReportFile } from "@repo/core"
+import { runTestSuite, generateReport, writeReportFile } from "@repo/core"
 import {TestCase} from "@repo/core/src/schema/schema"
 
 const args = process.argv.slice(2)
@@ -34,10 +34,9 @@ async function runTests(file: string) {
         const fileContent = fs.readFileSync(file, "utf-8")
 
         const raw: any = yaml.load(fileContent)
-        const parsed: any = resolveObject(raw)
 
-        const baseUrl: string = parsed.baseUrl
-        const tests: TestCase[] = parsed.tests
+        const baseUrl: string = raw.baseUrl
+        const tests: TestCase[] = raw.tests
 
         if (!tests || !Array.isArray(tests)){
             console.log("Invalid YAML format: `tests` array is misssing")
@@ -45,7 +44,10 @@ async function runTests(file: string) {
         }
 
         const startTime = Date.now()
-        const results = await runTestSuite(baseUrl, tests, concurrency)
+        const env: Record<string, string> = Object.fromEntries(
+            Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined)
+        )
+        const results = await runTestSuite(baseUrl, tests, concurrency, env)
 
         if (reportPath) {
             const duration = Date.now() - startTime

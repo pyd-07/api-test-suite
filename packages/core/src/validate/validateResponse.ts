@@ -1,11 +1,16 @@
 import {Expectation, ValidatedResponse} from "../schema/schema"
 import {deepMatch} from "../utils/deepMatch"
 
-export async function validate(response: Awaited< ReturnType<typeof fetch> >, expect: Expectation, responseTime: number) : Promise<ValidatedResponse> {
+export function validate(response: any, expect: Expectation, responseTime: number) : ValidatedResponse {
     const actualStatus = response.status
     const expectedStatus = expect.status
 
-    const resText = await response.text()
+    const body = response.body;
+
+    const resText =
+        typeof body === "string"
+            ? body
+            : JSON.stringify(body);
 
     let validation: ValidatedResponse ={ stat: "pass" }
 

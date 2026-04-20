@@ -178,3 +178,147 @@ tests:
           address:
             geo:
               lat: "-37.3159"
+
+  # -------------------------
+  # EXTRACTION + DEPENDENCY FLOW
+  # -------------------------
+
+  - name: Extract User From API
+    request:
+      method: GET
+      url: /users/1
+    expect:
+      status: 200
+    extract:
+      extractedUserId: $.id
+      extractedUserName: $.name
+
+  - name: Use Extracted User ID
+    request:
+      method: GET
+      url: /users/${extractedUserId}
+    expect:
+      status: 200
+      body:
+        equals:
+          id: 1
+
+  # -------------------------
+  # CHAINING MULTIPLE VALUES
+  # -------------------------
+
+  - name: Extract First Post
+    request:
+      method: GET
+      url: /posts/1
+    expect:
+      status: 200
+    extract:
+      postId: $.id
+      postTitle: $.title
+
+  - name: Use Extracted Post
+    request:
+      method: GET
+      url: /posts/${postId}
+    expect:
+      status: 200
+
+  # -------------------------
+  # ARRAY EXTRACTION
+  # -------------------------
+
+  - name: Extract First User From List
+    request:
+      method: GET
+      url: /users
+    expect:
+      status: 200
+    extract:
+      firstUserId: $[0].id
+
+  - name: Use First User From Array
+    request:
+      method: GET
+      url: /users/${firstUserId}
+    expect:
+      status: 200
+
+  # -------------------------
+  # VARIABLE OVERWRITE TEST
+  # -------------------------
+
+  - name: Extract User A (will be overwritten)
+    request:
+      method: GET
+      url: /users/1
+    expect:
+      status: 200
+    extract:
+      userId: $.id
+
+  - name: Extract User B (overwrite userId)
+    request:
+      method: GET
+      url: /users/2
+    expect:
+      status: 200
+    extract:
+      userId: $.id
+
+  - name: Use Overwritten userId
+    request:
+      method: GET
+      url: /users/${userId}
+    expect:
+      status: 200
+      body:
+        equals:
+          id: 2
+
+  # -------------------------
+  # ENV vs CONTEXT PRIORITY TEST
+  # -------------------------
+
+  - name: Context Overrides Env
+    request:
+      method: GET
+      url: /users/3
+    expect:
+      status: 200
+    extract:
+      USER_ID: $.id   # same name as env var
+
+  - name: Use USER_ID (should use context, not env)
+    request:
+      method: GET
+      url: /users/${USER_ID}
+    expect:
+      status: 200
+      body:
+        equals:
+          id: 3
+
+  # -------------------------
+  # FAILURE: INVALID EXTRACTION PATH
+  # -------------------------
+
+  - name: Broken Extraction Path
+    request:
+      method: GET
+      url: /users/1
+    expect:
+      status: 200
+    extract:
+      brokenField: $.this.path.does.not.exist
+
+  # -------------------------
+  # FAILURE: USING VARIABLE BEFORE DEFINITION
+  # -------------------------
+
+  - name: Use Undefined Variable
+    request:
+      method: GET
+      url: /users/${undefinedVar}
+    expect:
+      status: 404

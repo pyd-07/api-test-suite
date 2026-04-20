@@ -1,6 +1,6 @@
 import {z} from "zod"
 
-export const HTTPMethodsSchema = z.enum([
+const HTTPMethodsSchema = z.enum([
     "GET",
     "POST",
     "PUT",
@@ -11,15 +11,15 @@ export const HTTPMethodsSchema = z.enum([
 export type HTTPMethods = z.infer<typeof HTTPMethodsSchema>
 
 
-export const QueryParamsSchema = z.record( z.string(), z.string().or(z.number()) )
+const QueryParamsSchema = z.record( z.string(), z.string().or(z.number()) )
 export type  QueryParams = z.infer<typeof QueryParamsSchema>
 
 
-export const HeadersSchema = z.record(z.string(), z.string())
+const HeadersSchema = z.record(z.string(), z.string())
 export type Headers = z.infer<typeof HeadersSchema>
 
 
-export const RequestSchema = z.object({
+const RequestSchema = z.object({
     method: HTTPMethodsSchema,
     url: z.string(),
 
@@ -30,13 +30,13 @@ export const RequestSchema = z.object({
 export type RequestConfig = z.infer<typeof RequestSchema>
 
 
-export const BodyExpectationSchema = z.object({
+const BodyExpectationSchema = z.object({
     contains: z.string().optional(),
     equals: z.any().optional()
 })
 
 
-export const ExpectationSchema = z.object({
+const ExpectationSchema = z.object({
     status: z.number(),
 
     headers: HeadersSchema.optional(),
@@ -47,6 +47,9 @@ export const ExpectationSchema = z.object({
 })
 export type Expectation = z.infer<typeof ExpectationSchema>
 
+const ExtractSchema = z.record(z.string(), z.string()).optional()
+export type ExtractConfig = z.infer<typeof ExtractSchema>
+
 export const TestCaseSchema = z.object({
     name: z.string(),
     description: z.string().optional(),
@@ -54,7 +57,8 @@ export const TestCaseSchema = z.object({
     request: RequestSchema,
     retries: z.number().optional(),
     retryDelay: z.number().optional(),
-    expect: ExpectationSchema
+    expect: ExpectationSchema,
+    extract: ExtractSchema
 })
 export type TestCase = z.infer<typeof TestCaseSchema>
 
