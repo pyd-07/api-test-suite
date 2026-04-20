@@ -19,7 +19,12 @@ Define API tests using YAML, execute them in parallel with configurable concurre
 - Support for headers, query parameters, and request bodies  
 - Deterministic result ordering even under parallel execution  
 - Structured CLI logging with categorized output (pass/fail/info/warn) and timestamps
-- JSON report generation with summary, metrics, and per-test results  
+- JSON report generation with summary, metrics, and per-test results 
+- Variable extraction from API responses using JSONPath  
+- Runtime context for sharing data between tests  
+- Dynamic request construction using `${variable}` syntax  
+- Support for chaining dependent tests via extracted values  
+- Priority-based variable resolution (context > environment)   
 - Modular architecture separating CLI and core engine  
 
 ---
@@ -80,37 +85,58 @@ BASE_URL=https://jsonplaceholder.typicode.com
 USER_ID=1
 NAME=Piyush
 ```
+---
+## Test Chaining & Variable Extraction
 
-### Example YAML
+You can extract values from one test’s response and reuse them in subsequent tests.
 
+Example
 ```yaml
-version: 1
-
-baseUrl: ${BASE_URL}
 
 tests:
-  - name: Get User
-    request:
-      method: GET
-      url: /users/${USER_ID}
-    expect:
-      status: 200
-
   - name: Create User
     request:
       method: POST
       url: /users
       body:
-        name: ${NAME}
+        name: "John"
     expect:
       status: 201
-```
+    extract:
+      userId: $.id
+
+  - name: Get Created User
+    request:
+      method: GET
+      url: /users/${userId}
+    expect:
+      status: 200
+  ```
+
+### How it works
+
+- extract uses JSONPath to select values from the response body
+- extracted values are stored in a runtime context
+- ${variable} syntax resolves values dynamically in subsequent tests
+
+### Variable Resolution Priority
+
+Variables are resolved in the following order:
+
+- Runtime context (extracted variables)
+- Environment variables (.env)
+
+This allows extracted values to override static configuration when needed.
 
 ### Notes
 
-* Variables are resolved before schema validation
-* Missing variables will throw an explicit error
-* Works across nested objects and arrays
+- Extraction runs only after a test passes
+- Missing variables will throw explicit errors
+- Supports nested JSON paths (e.g., $.data.id)
+- Works across headers, query params, and request body
+
+> ⚠️ Note: Tests using variable extraction or dynamic variables are intended to be run sequentially to ensure deterministic behavior. Parallel execution with shared context is not yet enforced.
+
 
 ---
 
@@ -122,6 +148,9 @@ version: 1
 baseUrl: https://jsonplaceholder.typicode.com
 
 tests:
+  # -------------------------
+  # BASIC VALIDATION
+  # -------------------------
   - name: Get User
     request:
       method: GET
@@ -133,6 +162,86 @@ tests:
         equals:
           id: 1
           name: "Leanne Graham"
+
+  # -------------------------
+  # STRING MATCHING
+  # -------------------------
+  - name: User Name Contains
+    request:
+      method: GET
+      url: /users/1
+    expect:
+      status: 200
+      body:
+        contains: "Leanne"
+
+  # -------------------------
+  # QUERY + HEADERS
+  # -------------------------
+  - name: Get Comments by Post
+    request:
+      method: GET
+      url: /comments
+      query:
+        postId: 1
+      headers:
+        Accept: application/json
+    expect:
+      status: 200
+
+  # -------------------------
+  # EXTRACTION + CHAINING
+  # -------------------------
+  - name: Extract User ID
+    request:
+      method: GET
+      url: /users/1
+    expect:
+      status: 200
+    extract:
+      userId: $.id
+      userName: $.name
+
+  - name: Use Extracted User ID
+    request:
+      method: GET
+      url: /users/${userId}
+    expect:
+      status: 200
+      body:
+        equals:
+          id: 1
+
+  # -------------------------
+  # ARRAY EXTRACTION
+  # -------------------------
+  - name: Extract First User From List
+    request:
+      method: GET
+      url: /users
+    expect:
+      status: 200
+    extract:
+      firstUserId: $[0].id
+
+  - name: Use First User From Array
+    request:
+      method: GET
+      url: /users/${firstUserId}
+    expect:
+      status: 200
+
+  # -------------------------
+  # ENV + CONTEXT VARIABLES
+  # -------------------------
+  - name: Create User (Env Variable)
+    request:
+      method: POST
+      url: /users
+      body:
+        name: ${NAME}
+    expect:
+      status: 201
 ```
 
 ---
@@ -264,13 +373,14 @@ Logging is handled at the orchestration layer to prevent duplicate logs during r
 * Separation of concerns (CLI vs core engine)
 * Composable execution pipeline (runner, concurrency, validation)
 * Deterministic output under parallel execution
+* Stateful test execution with controlled data flow between tests
 * Minimal dependencies with scalable architecture
 
 ---
 
 ## Roadmap
 
-* Array matching support
+* Dependency-aware execution (automatic sequential mode for chained tests)
 * Authentication support
 
 ---
