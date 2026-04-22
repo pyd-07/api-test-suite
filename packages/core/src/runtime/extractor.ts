@@ -1,5 +1,5 @@
 import { JSONPath } from "jsonpath-plus";
-import { ExtractConfig } from "../schema/schema";
+import { ExtractConfig, RequestConfig, TestCase } from "../schema/schema";
 import { RuntimeContext } from "./context";
 
 export function extractVariables(
@@ -30,4 +30,33 @@ export function extractVariables(
         }
     }
     
+}
+
+function getExtractedVars(tests: TestCase[]): string[] {
+    const vars: string[] = []
+    for (const test of tests) {
+        if (test.extract) {
+            Object.keys(test.extract).forEach(key => vars.push(key))
+        }
+    }
+    return vars
+}
+
+function usesExtractedVars(
+    request: RequestConfig,
+    extractedVars: string[]
+): boolean {
+    const str = JSON.stringify(request)
+    for (const v of extractedVars) {
+        if (str.includes(`\${${v}}`)) return true
+    }
+    return false
+}
+
+export function shouldRunSequentially(
+    tests: TestCase[],
+): boolean {
+    const extractedVars = getExtractedVars(tests)
+    
+    return tests.some(test => usesExtractedVars(test.request, extractedVars))
 }

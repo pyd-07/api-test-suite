@@ -22,10 +22,22 @@ Define API tests using YAML, execute them in parallel with configurable concurre
 - JSON report generation with summary, metrics, and per-test results 
 - Variable extraction from API responses using JSONPath  
 - Runtime context for sharing data between tests  
-- Dynamic request construction using `${variable}` syntax  
+- Dynamic request construction using `${variable}` syntax with runtime resolution  
 - Support for chaining dependent tests via extracted values  
 - Priority-based variable resolution (context > environment)   
 - Modular architecture separating CLI and core engine  
+
+## Execution Model
+
+The engine follows a deterministic execution pipeline:
+
+1. Resolve variables (context + environment)  
+2. Execute request  
+3. Validate response  
+4. Extract variables (if defined)  
+5. Update runtime context  
+
+This ensures predictable behavior even in complex chained test scenarios.
 
 ---
 
@@ -128,6 +140,15 @@ Variables are resolved in the following order:
 
 This allows extracted values to override static configuration when needed.
 
+### Execution Behavior
+
+The test runner automatically detects dependencies between tests.
+
+- If no dependencies are found → tests run in parallel  
+- If extracted variables are used in subsequent tests → execution falls back to sequential mode  
+
+This ensures both performance and correctness without manual configuration.
+
 ### Notes
 
 - Extraction runs only after a test passes
@@ -135,7 +156,7 @@ This allows extracted values to override static configuration when needed.
 - Supports nested JSON paths (e.g., $.data.id)
 - Works across headers, query params, and request body
 
-> ⚠️ Note: Tests using variable extraction or dynamic variables are intended to be run sequentially to ensure deterministic behavior. Parallel execution with shared context is not yet enforced.
+> ⚠️ Note: Tests using extracted variables may trigger automatic sequential execution to ensure deterministic results.
 
 
 ---
