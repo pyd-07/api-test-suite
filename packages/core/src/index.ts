@@ -5,7 +5,6 @@ import { shouldRunSequentially } from "./runtime/extractor"
 import { runWithConcurrency } from "./utils/concurrency"
 import { runTest } from "./runner/runner"
 import { runWithRetry } from "./utils/retry"
-import { log } from "./logger/logger"
 import { logger } from "./logger/wrapper"
 import { createSpinner } from "./logger/spinner"
 import { renderSummaryTable } from "./logger/table"
@@ -20,6 +19,21 @@ export async function runTestSuite(baseUrl: string, tests : TestCase[], concurre
         const runSequentially = shouldRunSequentially(tests)
         const effectiveConcurrency = runSequentially ? 1 : concurrency
 
+        // Phase 1: Header
+        console.log()
+        if (runSequentially) {
+            logger.warn(`Running ${tests.length} tests sequentially (dependency detected)`)
+        } else {
+            logger.info(`Running ${tests.length} tests with ${effectiveConcurrency} workers (parallel)`)
+        }
+        console.log()
+
+        // Phase 2: Execute with spinner
+        let done = 0
+        const total = tests.length
+        const spinner = createSpinner(`Executing tests... (0/${total})`)
+        spinner.start()
+
         const worker = (resolvedBaseUrl:string, test: TestCase) => {
             const resolvedRequest = resolveObject(test.request, context, env)
             return runWithRetry(
@@ -30,20 +44,32 @@ export async function runTestSuite(baseUrl: string, tests : TestCase[], concurre
                     context
                 ),
                 test.retries,
-                test.retryDelay
+                test.retryDelay,
+                (attempt, maxRetries) => {
+                    spinner.clear()
+                    logger.retry(test.name, attempt, maxRetries)
+                    spinner.render()
+                }
             )
         }
 
-        // Phase 1: Header
-        console.log()
-        logger.info(`  Running ${chalk.bold(String(tests.length))} tests with ${chalk.bold(String(effectiveConcurrency))} worker/s`)
-        console.log()
-
-        // Phase 2: Execute with spinner
-        const spinner = createSpinner("Executing tests…")
-        spinner.start()
-
-        const results = await runWithConcurrency(resolvedBaseUrl, tests, effectiveConcurrency, worker)
+        const results = await runWithConcurrency(
+            resolvedBaseUrl, 
+            tests, 
+            effectiveConcurrency, 
+            worker,
+            (result) => {
+                spinner.clear()
+                if (result.stat === "pass") {
+                    logger.pass(result.name, result.responseTime)
+                } else {
+                    logger.fail(result.name, result.failReason)
+                }
+                done++
+                spinner.text = `Executing tests... (${done}/${total})`
+                spinner.render()
+            }
+        )
 
         const failCount = results.filter((result) => result.stat==="fail").length
 
@@ -54,18 +80,7 @@ export async function runTestSuite(baseUrl: string, tests : TestCase[], concurre
             spinner.succeed(chalk.green("All tests passed"))
         }
 
-        // Phase 4: Per-test results (deterministic order)
-        console.log()
-        logger.divider()
-        console.log(chalk.bold("  Test Results"))
-        logger.divider()
-        console.log()
-
-        for (const result of results) {
-            log(result)
-        }
-
-        // Phase 5: Summary table
+        // Phase 4 & 5: Summary table
         console.log()
         renderSummaryTable(results)
 

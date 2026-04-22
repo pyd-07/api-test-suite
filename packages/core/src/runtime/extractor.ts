@@ -21,7 +21,6 @@ export function extractVariables(
                 }
                 const value = result[0]
                 context.set(key, value)
-                console.debug(`[Extract] ${testName} → ${key} = ${JSON.stringify(value)}`)
             } catch (err) {
                 throw new Error(`[Extraction Error] Failed for "${key}" in "${testName}": ${err}`);
             }

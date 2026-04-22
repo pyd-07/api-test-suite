@@ -3,7 +3,8 @@ import { ValidatedTest } from "../schema/schema";
 export async function runWithRetry(
     fn: () => Promise<ValidatedTest>,
     retries: number = 2,
-    delay: number = 100
+    delay: number = 100,
+    onRetry?: (attempt: number, maxRetries: number) => void
 ): Promise<ValidatedTest>{
     let lastErr: any
 
@@ -12,7 +13,8 @@ export async function runWithRetry(
             return await fn()
         } catch (err: any) {
             lastErr = err
-            if (attempt<retries){
+            if (attempt<retries - 1){
+               onRetry?.(attempt + 1, retries)
                if(delay>0){
                 await new Promise(res => setTimeout(res, delay))
                } 

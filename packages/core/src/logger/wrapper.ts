@@ -1,28 +1,25 @@
-import consola from "consola";
 import chalk from "chalk";
 
 export const logger = {
     pass: (name:string, time:number|undefined) => {
-        const tag = chalk.bgGreen.black.bold(" PASS ")
-        const timeStr = time !== undefined ? chalk.dim(` ${time}ms`) : ""
-        consola.log(`  ${tag}  ${name}${timeStr}`)
+        const timeStr = time !== undefined ? chalk.dim(` (${time}ms)`) : ""
+        console.log(`  ${chalk.green("✔")} ${chalk.bold("PASS")}   ${name}${timeStr}`)
     },
     fail: (name:string, reason?:string) => {
-        const tag = chalk.bgRed.white.bold(" FAIL ")
-        const reasonStr = reason ? chalk.dim(` → ${chalk.redBright(reason)}`) : ""
-        consola.log(`  ${tag}  ${name}${reasonStr}`)
+        const reasonStr = reason ? chalk.dim(` → ${chalk.red(reason)}`) : ""
+        console.log(`  ${chalk.red("✖")} ${chalk.bold("FAIL")}   ${name}${reasonStr}`)
+    },
+    retry: (name:string, attempt:number, maxRetries:number) => {
+        console.log(`  ${chalk.yellow("⟳")} ${chalk.bold("RETRY")}  ${name} ${chalk.dim(`(attempt ${attempt}/${maxRetries})`)}`)
     },
     info: (msg:string) => {
-        consola.info(msg)
-    },
-    start: (msg:string) => {
-        consola.start(msg)
+        console.log(`  ${chalk.blue("ℹ")} ${msg}`)
     },
     warn: (msg:string) => {
-        consola.warn(msg)
+        console.log(`  ${chalk.yellow("⚠")} ${chalk.bold("WARN")}   ${msg}`)
     },
     error: (msg:string) => {
-        consola.error(msg)
+        console.log(`  ${chalk.red("✖")} ${chalk.bold("ERROR")}  ${msg}`)
     },
     divider: () => {
         console.log(chalk.dim("  " + "─".repeat(60)))
