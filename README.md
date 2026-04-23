@@ -24,7 +24,8 @@ Define API tests using YAML, execute them in parallel with configurable concurre
 - Runtime context for sharing data between tests  
 - Dynamic request construction using `${variable}` syntax with runtime resolution  
 - Support for chaining dependent tests via extracted values  
-- Priority-based variable resolution (context > environment)   
+- Priority-based variable resolution (context > environment)
+- Real-time output of test results as they complete, even in parallel execution mode
 - Modular architecture separating CLI and core engine  
 
 ## Execution Model
@@ -382,6 +383,12 @@ The CLI uses structured and categorized logging for clear output.
 - Failure grouping at the end of execution  
 
 Logging is handled at the orchestration layer to prevent duplicate logs during retries.
+
+## Real-Time Execution Output
+
+The CLI provides real-time feedback during test execution.
+
+Each test result is displayed immediately as it completes, even in parallel execution mode.
 
 
 ## CLI Output Preview
