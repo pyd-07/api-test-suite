@@ -17,12 +17,12 @@ export function extractVariables(
                     json: responseBody
                 })
                 if (!result || result.length === 0) {
-                    throw new Error(`[Extraction Error] "${key}" not found using path "${path}"`)
+                    throw new Error(` ~ "${key}" not found using path "${path}"`)
                 }
                 const value = result[0]
                 context.set(key, value)
-            } catch (err) {
-                throw new Error(`[Extraction Error] Failed for "${key}" in "${testName}": ${err}`);
+            } catch (err:any) {
+                throw new Error(`[Extraction Error] Failed for "${key}" in "${testName}": ${err.message}`);
             }
         } else {
             throw new Error(`[Extraction Error] No path specified for "${key}" in ${testName}`)
